@@ -1,0 +1,49 @@
+name: Build APK - Viáticos App
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # Permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  build:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Descargar código
+        uses: actions/checkout@v4
+
+      - name: ☕ Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🐦 Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Obtener dependencias
+        run: flutter pub get
+
+      - name: ✅ Verificar código
+        run: flutter analyze --no-fatal-infos
+
+      - name: 🔨 Compilar APK (Release)
+        run: flutter build apk --release --no-shrink
+
+      - name: 📤 Subir APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: viaticos-app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: 📊 Mostrar tamaño del APK
+        run: |
+          echo "✅ APK compilado exitosamente!"
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
